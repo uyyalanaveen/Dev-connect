@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Input from '../../components/Input';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate,Link } from 'react-router-dom'; // Import useNavigate
 import { setAuthToken } from '../../utility/auth'; // Import auth utility
 
 const Login = () => {
@@ -73,9 +73,9 @@ const Login = () => {
         </div>
 
         <div className="mb-4 w-full flex justify-end">
-          <a href="/reset-password" className="text-blue-500 underline">
+          <Link to="/reset-password" className="text-blue-500 underline">
             Forget Password?
-          </a>
+          </Link>
         </div>
 
         <button
@@ -90,9 +90,9 @@ const Login = () => {
           <h2>
             Don't have an account?{' '}
             <span>
-              <a href="/signup" className="text-blue-500 font-medium">
+              <Link to="/signup" className="text-blue-500 font-medium">
                 Sign Up
-              </a>
+              </Link>
             </span>
           </h2>
         </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,Link } from 'react-router-dom';
 import Input from '../../components/Input'; // Assuming a reusable Input component
 
 const ForgetPassword = () => {
@@ -221,9 +221,9 @@ const ForgetPassword = () => {
           <h2>
             Don't have an account?{' '}
             <span>
-              <a href="/signup" className="text-blue-500 font-medium">
+              <Link to="/signup" className="text-blue-500 font-medium">
                 Sign Up
-              </a>
+              </Link>
             </span>
           </h2>
         </div>
