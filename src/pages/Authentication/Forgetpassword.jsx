@@ -12,6 +12,7 @@ const ForgetPassword = () => {
   const [step, setStep] = useState(1); // 1: Request OTP, 2: Validate OTP, 3: Set New Password
   const navigate = useNavigate();
 
+  const API_URL = 'https://dev-conncet-backend.onrender.com/api';
   const handleRequestOTP = async (e) => {
     e.preventDefault();
 
@@ -19,7 +20,7 @@ const ForgetPassword = () => {
     setError('');
 
     try {
-      const checkEmailResponse = await fetch('http://localhost:5000/api/check-email', {
+      const checkEmailResponse = await fetch(`${API_URL}/check-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -32,7 +33,7 @@ const ForgetPassword = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/request-otp', {
+      const response = await fetch(`${API_URL}/request-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -60,7 +61,7 @@ const ForgetPassword = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/validate-otp', {
+      const response = await fetch(`${API_URL}/validate-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp }),
@@ -99,7 +100,7 @@ const ForgetPassword = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/set-new-password', {
+      const response = await fetch(`${API_URL}/set-new-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

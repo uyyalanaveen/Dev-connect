@@ -14,7 +14,7 @@ import { isAuthenticated } from './utility/auth.js'; // Import auth utility
 import Home from './pages/Home/Home.jsx';
 import Contact from './pages/contact/Contact.jsx';
 import Forgetpassword from './pages/Authentication/Forgetpassword.jsx';
-import SetNewPaaword from './pages/Authentication/SetNewPaaword.jsx';
+// import SetNewPaaword from './pages/Authentication/SetNewPaaword.jsx';
 
 
 
@@ -39,10 +39,10 @@ const router = createBrowserRouter([
         path: '/reset-password',
         element: isAuthenticated() ? <Navigate to="/home" /> : <Forgetpassword />,
       },
-      {
-        path: '/set-new-password',
-        element: isAuthenticated() ? <Navigate to="/home" /> : <SetNewPaaword />,
-      },
+      // {
+      //   path: '/set-new-password',
+      //   element: isAuthenticated() ? <Navigate to="/home" /> : <SetNewPaaword />,
+      // },
       {
         path: '/contact',
         element: <Contact />,

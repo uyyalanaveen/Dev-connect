@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api'; // Backend URL
+const API_URL = 'https://dev-conncet-backend.onrender.com/api'; // Backend URL
 
 // Signup API Call
 export const signupUser = async (fullname, number, email, password) => {
