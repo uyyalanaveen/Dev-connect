@@ -1,15 +1,28 @@
 import React, { useState } from 'react';
 import Logo from '../../assets/Logo.png';
 import { FaBars, FaTimes } from 'react-icons/fa';
-
-const NavItems = [
-  { name: 'Home', href: '/' },
-  { name: 'Features', href: '/features' },
-  { name: 'Contact', href: '/contact' },
-];
+import { Link } from 'react-router-dom';
+import { isAuthenticated, removeAuthToken } from '../../utility/auth';
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleSignOut = () => {
+    removeAuthToken();
+    window.location.href = '/login'; // Redirect to login page after sign out
+  };
+
+  const NavItems = [
+    { name: 'Home', href: '/' },
+    { name: 'Features', href: '/features' },
+    { name: 'Contact', href: '/contact' },
+  ];
+
+  if (isAuthenticated()) {
+    NavItems.push({ name: 'Sign Out', href: '/login', onClick: handleSignOut });
+  } else {
+    NavItems.push({ name: 'Login', href: '/login' });
+  }
 
   return (
     <nav className="flex items-center justify-between px-6 py-4 bg-gray-900 text-white">
@@ -22,13 +35,14 @@ const Navbar = () => {
       {/* Desktop Menu */}
       <div className="hidden md:flex gap-8 items-center">
         {NavItems.map((item, index) => (
-          <a
+          <Link
             key={index}
-            href={item.href}
+            to={item.href}
             className="text-sm sm:text-base hover:text-blue-500 transition-colors duration-300"
+            onClick={item.onClick ? item.onClick : null}
           >
             {item.name}
-          </a>
+          </Link>
         ))}
       </div>
 
@@ -58,14 +72,17 @@ const Navbar = () => {
             onClick={() => setIsMobileMenuOpen(false)}
           />
           {NavItems.map((item, index) => (
-            <a
+            <Link
               key={index}
-              href={item.href}
+              to={item.href}
               className="hover:text-blue-500 transition-colors duration-300"
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                if (item.onClick) item.onClick();
+              }}
             >
               {item.name}
-            </a>
+            </Link>
           ))}
         </div>
       )}

@@ -1,6 +1,5 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-
 import './index.css'
 import '@fontsource/poppins/700.css';
 // import '@fontsource/poppins';
@@ -14,6 +13,7 @@ import { isAuthenticated } from './utility/auth.js'; // Import auth utility
 import Home from './pages/Home/Home.jsx';
 import Contact from './pages/contact/Contact.jsx';
 import Forgetpassword from './pages/Authentication/Forgetpassword.jsx';
+import Features from './pages/features/Features.jsx';
 // import SetNewPaaword from './pages/Authentication/SetNewPaaword.jsx';
 
 
@@ -39,10 +39,10 @@ const router = createBrowserRouter([
         path: '/reset-password',
         element: isAuthenticated() ? <Navigate to="/home" /> : <Forgetpassword />,
       },
-      // {
-      //   path: '/set-new-password',
-      //   element: isAuthenticated() ? <Navigate to="/home" /> : <SetNewPaaword />,
-      // },
+      {
+        path: '/features',  
+        element: <Features />,  
+      },
       {
         path: '/contact',
         element: <Contact />,

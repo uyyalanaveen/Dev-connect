@@ -1,17 +1,25 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './src/components/Navbar/Navbar';
+import { isAuthenticated } from './src/utility/auth';
+import Footer from './src/pages/Footer/Footer.jsx';
 
 const Layout = () => {
-  return (
-    <div className="flex flex-col bg-black">
-      {/* Navbar */}
-      
-        <Navbar />
+  const isLoggedIn = isAuthenticated();
 
-      {/* Main Content */}
-      <div className="max-w-screen-lg mx-auto w-full  text-white max-h-full h-screen mt-1">
-        <Outlet />
+  return (
+    <div className={`flex flex-col min-h-screen bg-gray-900 w-full items-center justify-between`}>
+      <div className={`flex flex-col min-h-screen bg-black w-full`}>
+        <Navbar />
+        <div
+          className={`flex-grow flex items-center justify-between text-white w-full h-full px-4`}>
+          <div className="max-w-screen-lg w-full">
+            <Outlet />
+          </div>
+        </div>
+        <div className='w-full'>
+          {/* <Footer /> */}
+        </div>
       </div>
     </div>
   );

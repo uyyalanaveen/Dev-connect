@@ -1,14 +1,14 @@
 const API_URL = 'https://dev-conncet-backend.onrender.com/api'; // Backend URL
 
 // Signup API Call
-export const signupUser = async (fullname, number, email, password) => {
+export const signupUser = async (fullname, email, password) => {
   try {
     const response = await fetch(`${API_URL}/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ fullname, number, email, password }),
+      body: JSON.stringify({ fullname, email, password }),
     });
 
     // Log response for debugging

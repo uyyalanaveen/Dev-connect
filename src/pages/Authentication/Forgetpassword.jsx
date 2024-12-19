@@ -126,7 +126,7 @@ const ForgetPassword = () => {
   };
 
   return (
-    <div className="flex items-center justify-center h-full md:text-lg">
+    <div className="flex mt-36 items-center justify-center h-full md:text-lg">
       <form
         onSubmit={
           step === 1

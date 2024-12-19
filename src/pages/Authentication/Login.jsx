@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Input from '../../components/Input';
 import { useNavigate,Link } from 'react-router-dom'; // Import useNavigate
 import { setAuthToken } from '../../utility/auth'; // Import auth utility
-
+import { ToastContainer, toast } from 'react-toastify';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,14 +30,17 @@ const Login = () => {
       if (response.ok && data.token) {
         setAuthToken(data.token); // Save token after successful login
         // Successful login, redirect to home page
+        toast.success('Login successful!');
         console.log('Login successful:', data);
         navigate('/home'); // Redirect to homepage ("/")
       } else {
         // Handle server error
+        toast.error(data.message || 'Login failed. Please check your credentials.');
         setError(data.message || 'Login failed. Please check your credentials.');
       }
     } catch (err) {
       // Handle network error or other issues
+      toast.error('Something went wrong. Please try again.');
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false); // Hide loading indicator
@@ -45,7 +48,7 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center h-full md:text-lg">
+    <div className="flex items-center justify-center h-full bg-black md:text-lg mt-36">
       <form
         onSubmit={handleSubmit}
         className="bg-transparent border border-gray-700 p-8 rounded-lg shadow-lg md:w-full max-w-md"
@@ -97,6 +100,7 @@ const Login = () => {
           </h2>
         </div>
       </form>
+      <ToastContainer />
     </div>
   );
 };
