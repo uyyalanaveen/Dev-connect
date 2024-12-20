@@ -1,5 +1,6 @@
 import React from "react";
 import Logo from "../../assets/Logo.png";
+import { Link } from "react-router-dom";
 const Footer = () => {
   return (
     <footer className="bg-gray-900 text-white py-8">
@@ -18,19 +19,19 @@ const Footer = () => {
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <a href="/about" className="hover:text-blue-400 transition">
+                <Link to="/about" className="hover:text-blue-400 transition">
                   About Us
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/features" className="hover:text-blue-400 transition">
+                <Link to="/features" className="hover:text-blue-400 transition">
                   Features
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/contact" className="hover:text-blue-400 transition">
+                <Link to="/contact" className="hover:text-blue-400 transition">
                   Contact
-                </a>
+                </Link>
               </li>
               
             </ul>
@@ -40,34 +41,34 @@ const Footer = () => {
           <div className="w-full md:w-1/3">
             <h3 className="text-lg font-semibold mb-4">Follow Us</h3>
             <div className="flex space-x-4">
-              <a
-                href="#"
+              <Link
+                to="#"
                 className="text-gray-400 hover:text-blue-400 transition"
                 aria-label="Facebook"
               >
                 <i className="fab fa-facebook-f"></i>
-              </a>
-              <a
+              </Link>
+              <Link
                 href="#"
                 className="text-gray-400 hover:text-blue-400 transition"
                 aria-label="Twitter"
               >
                 <i className="fab fa-twitter"></i>
-              </a>
-              <a
+              </Link>
+              <Link
                 href="#"
                 className="text-gray-400 hover:text-blue-400 transition"
                 aria-label="LinkedIn"
               >
                 <i className="fab fa-linkedin-in"></i>
-              </a>
-              <a
+              </Link>
+              <Link
                 href="#"
                 className="text-gray-400 hover:text-blue-400 transition"
                 aria-label="GitHub"
               >
                 <i className="fab fa-github"></i>
-              </a>
+              </Link>
             </div>
           </div>
         </div>
