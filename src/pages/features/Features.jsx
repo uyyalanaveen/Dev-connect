@@ -1,6 +1,6 @@
 import React from 'react';
 import Ai from "../../assets/Ai.png";
-import whiteboard from "../../assets/whiteboard.png";
+import whiteboard from "../../assets/Whiteboard.png";
 import auth from "../../assets/Authentication.png"
 import sharing from "../../assets/sharing.png";
 import webrtc from "../../assets/webrtc.png";
