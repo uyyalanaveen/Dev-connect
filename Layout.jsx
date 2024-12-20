@@ -18,7 +18,7 @@ const Layout = () => {
           </div>
         </div>
         <div className='w-full'>
-          {/* <Footer /> */}
+          <Footer />
         </div>
       </div>
     </div>

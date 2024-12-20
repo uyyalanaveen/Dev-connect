@@ -54,7 +54,7 @@ export const sendOtp = async (email) => {
   }
 };
 
-// Verify OTP API Call
+
 export const verifyOtp = async (email, otp) => {
   try {
     const response = await fetch(`${API_URL}/validate-otp`, {
