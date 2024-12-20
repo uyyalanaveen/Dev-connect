@@ -1,5 +1,4 @@
 import React from 'react';
-import avatar from '../../assets/avatar.png';
 import { FiSettings } from 'react-icons/fi';
 import UsersCard from './UserCard';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import avatar from '../../assets/avatar.png';
+import avatar from '../../assets/Avatar.png';
 
 const UserCard = () => {
   return (
