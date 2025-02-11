@@ -4,7 +4,7 @@ import { isAuthenticated, removeAuthToken } from '../utility/auth';
 
 const AuthRoute = ({ children }) => {
   if (!isAuthenticated()) {
-    removeAuthToken(); // Clear any invalid tokens
+    removeAuthToken(); 
     return <Navigate to="/login" />;
   }
   return children;

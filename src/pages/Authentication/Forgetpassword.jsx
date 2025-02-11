@@ -101,7 +101,7 @@ const ForgetPassword = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`${API_URL}/set-new-password`, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,

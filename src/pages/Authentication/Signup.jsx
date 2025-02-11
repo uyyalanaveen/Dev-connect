@@ -4,6 +4,8 @@ import { signupUser, sendOtp, verifyOtp } from '../../utility/api.js';
 import { useNavigate, Link } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import profileimage from '../../assets/profile.png'
+
 
 const Signup = () => {
   const [fullname, setFullname] = useState('');
@@ -29,7 +31,7 @@ const Signup = () => {
         toast.error('Failed to send OTP. Please try again.');
       }
     } catch (err) {
-      toast.error('Something went wrong while sending OTP.');
+      toast.error('User already existed with this email');
     } finally {
       setLoading(false);
     }
@@ -62,7 +64,7 @@ const Signup = () => {
     }
 
     if (password !== confirmPassword) {
-      toast.error("Passwords don't match.");
+      toast.error("Passwords doesn't match.");
       return;
     }
 
@@ -84,17 +86,24 @@ const Signup = () => {
     }
   };
 
-  useEffect(() => {
-    console.log("OTP Verified changed to: ", otpVerified);
-  }, [otpVerified]);
+
 
   return (
     <div className="flex mt-36 items-center justify-center h-full md:text-lg bg-black">
       <form
         onSubmit={handleSubmit}
-        className="bg-transparent border border-gray-700 p-8 rounded-lg shadow-lg md:w-full max-w-md"
+        className="bg-transparent border border-gray-700 p-8 rounded-lg shadow-lg md:w-full max-w-md "
       >
         <h2 className="text-3xl font-bold text-white mb-6 text-center">Sign Up</h2>
+
+        <div className='mb-5 mt-10 w-full flex justify-center relative'>
+          <img
+            src={profileimage}
+            alt="Profile"
+            className='w-16 h-16 md:w-24 md:h-24 rounded-full'
+          />
+        </div>
+
 
         <div className="mb-5 w-full">
           <Input

@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import '@fontsource/poppins/700.css';
 // import '@fontsource/poppins';
-import { createBrowserRouter,RouterProvider,Navigate } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import Layout from '../Layout.jsx'
 import Hero from './pages/Hero/Hero.jsx'
 import Signup from './pages/Authentication/Signup.jsx';
@@ -14,7 +14,10 @@ import Home from './pages/Home/Home.jsx';
 import Contact from './pages/contact/Contact.jsx';
 import Forgetpassword from './pages/Authentication/Forgetpassword.jsx';
 import Features from './pages/features/Features.jsx';
-// import SetNewPaaword from './pages/Authentication/SetNewPaaword.jsx';
+import ProfilePage from './pages/Profile/ProfilePage.jsx';
+import UserSearch from './pages/Profile/UserSearch.jsx';
+import UpdateProfilePage from './pages/Profile/UpdateProfile.jsx';
+import Room from './pages/Rooms/Room.jsx';
 
 
 
@@ -40,8 +43,8 @@ const router = createBrowserRouter([
         element: isAuthenticated() ? <Navigate to="/home" /> : <Forgetpassword />,
       },
       {
-        path: '/features',  
-        element: <Features />,  
+        path: '/features',
+        element: <Features />,
       },
       {
         path: '/contact',
@@ -49,8 +52,29 @@ const router = createBrowserRouter([
       },
       {
         path: '/home',
-        element: <AuthRoute><Home /></AuthRoute>, // Auth-protected route
+        element:  <AuthRoute><Home /></AuthRoute> , // Auth-protected route
       },
+      {
+        path: '/profile/:id',
+        element:
+          (
+            <AuthRoute>
+              <ProfilePage />
+            </AuthRoute>
+          )
+      },
+      {
+        path:'/search-users',
+        element:<AuthRoute><UserSearch /></AuthRoute>
+      },
+      {
+        path:'/update-profile',
+        element: <AuthRoute><UpdateProfilePage /></AuthRoute>
+      },
+      {
+        path : '/room/:id',
+        element: <AuthRoute><Room /></AuthRoute>
+      }
     ],
   },
 ]);

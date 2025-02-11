@@ -6,7 +6,6 @@ const Footer = () => {
     <footer className="bg-gray-900 text-white py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-wrap justify-between items-center">
-          {/* Logo and Description */}
           <div className="w-full md:w-1/3 mb-6 md:mb-0">
             <h2 className="text-2xl font-bold">DEV CONNECT</h2>
             <p className="text-gray-400 mt-2">
@@ -75,7 +74,7 @@ const Footer = () => {
 
         {/* Bottom Section */}
         <div className="mt-8 border-t border-gray-700 pt-4 text-center text-sm text-gray-500">
-          © {new Date().getFullYear()} YourCompany. All rights reserved.
+          © {new Date().getFullYear()} DevConnect. All rights reserved.
         </div>
       </div>
     </footer>

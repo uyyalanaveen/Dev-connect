@@ -1,6 +1,5 @@
 const API_URL = 'https://dev-conncet-backend.onrender.com/api'; // Backend URL
 
-// Signup API Call
 export const signupUser = async (fullname, email, password) => {
   try {
     const response = await fetch(`${API_URL}/register`, {

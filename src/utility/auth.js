@@ -1,6 +1,6 @@
 export const isAuthenticated = () => {
   const token = localStorage.getItem('authToken');
-  console.log("Auth Token Exists:", token !== null); // Debugging
+  console.log("Auth Token Exists:", token !== null); 
   return token !== null;
 };
 
