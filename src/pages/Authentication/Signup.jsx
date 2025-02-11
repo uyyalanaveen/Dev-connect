@@ -4,7 +4,7 @@ import { signupUser, sendOtp, verifyOtp } from '../../utility/api.js';
 import { useNavigate, Link } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import profileimage from '../../assets/profile.png'
+import profileimage from '../../assets/Profile.png'
 
 
 const Signup = () => {
