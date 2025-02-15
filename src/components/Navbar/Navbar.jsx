@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Menu, X, User, LogOut, Home, Settings, MessageSquare } from "lucide-react";
+import { Menu, X, User, LogOut, Home, Search, MessageSquare } from "lucide-react";
+import { MdFeaturedPlayList } from "react-icons/md";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -39,8 +40,8 @@ const Navbar = () => {
 
   const NavItems = [
     { name: "Home", href: "/", icon: <Home className="h-5 w-5" /> },
-    { name: "Features", href: "/features", icon: <MessageSquare className="h-5 w-5" /> },
-    { name: "Search", href: "/search-users", icon: <Settings className="h-5 w-5" /> },
+    { name: "Features", href: "/features", icon: <MdFeaturedPlayList className="h-5 w-5" /> },
+    { name: "Search", href: "/search-users", icon: <Search className="h-5 w-5" /> },
   ];
 
   return (

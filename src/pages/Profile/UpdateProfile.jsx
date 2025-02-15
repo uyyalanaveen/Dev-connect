@@ -47,7 +47,7 @@ const UpdateProfilePage = () => {
     }
 
     try {
-      const response = await axios.put('https://dev-conncet-backend.onrender.com/api/users/me/update-profile', formData, {
+      const response = await axios.put('http://localhost:5000/api/users/me/update-profile', formData, {
         headers: { 
           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           'Content-Type': 'multipart/form-data',

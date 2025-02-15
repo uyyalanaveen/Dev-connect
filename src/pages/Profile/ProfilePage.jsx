@@ -2,44 +2,95 @@ import React, { useEffect, useState } from 'react';
 import { isAuthenticated } from '../../utility/auth';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const ProfilePage = () => {
   const { id } = useParams();
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // For handling loading state
+  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated()) {
-      axios
-        .get(`https://dev-conncet-backend.onrender.com/api/users/${id}`)
+      const token = localStorage.getItem("authToken");
+      
+      axios.get(`http://localhost:5000/api/users/${id}`)
         .then((response) => {
-          console.log(response.data);
           setUser(response.data);
-          setLoading(false); // Stop loading once data is fetched
+          setLoading(false);
         })
         .catch((error) => {
-          console.log('error: ', error);
+          console.log('Error:', error);
           setLoading(false);
         });
+      
+      axios.get("http://localhost:5000/api/current-user", {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then((response) => {
+        setCurrentUser(response.data);
+      }).catch((error) => console.error("Error fetching current user:", error));
     }
   }, [id]);
 
+  const handleFollow = async () => {
+    if (processing) return;
+    setProcessing(true);
+    try {
+      const token = localStorage.getItem("authToken");
+      await axios.post("http://localhost:5000/api/users/add-friend", { followId: id }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUser((prev) => ({ ...prev, followers: [...prev.followers, currentUser._id] }));
+      toast.success("User followed successfully!");
+    } catch (error) {
+      toast.error("Error following user!");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleUnfollow = async () => {
+    if (processing) return;
+    setProcessing(true);
+    try {
+      const token = localStorage.getItem("authToken");
+      await axios.delete("http://localhost:5000/api/users/remove-friend", {
+        data: { unfollowId: id },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUser((prev) => ({
+        ...prev,
+        followers: prev.followers.filter((userId) => userId !== currentUser._id),
+      }));
+      toast.success("User unfollowed successfully!");
+    } catch (error) {
+      toast.error("Error unfollowing user!");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   if (loading) {
-    return <div>Loading...</div>; // Display loading text while data is being fetched
+    return <div>Loading...</div>;
   }
 
   return (
     <div>
-      Profile
-      <div>
-        {user && (
-          <div>
-            <h1>{user.fullname}</h1>
-            <img src={user.profileImage} alt="user profile" />
-            <h2>{user.email}</h2>
-          </div>
-        )}
-      </div>
+      <h1>{user.fullname}</h1>
+      <img src={user.profileImage} alt="user profile" />
+      <h2>{user.email}</h2>
+      {currentUser && user._id !== currentUser._id && (
+        user.followers.includes(currentUser._id) ? (
+          <button onClick={handleUnfollow} disabled={processing}>
+            {processing ? "Unfollowing..." : "Unfollow"}
+          </button>
+        ) : (
+          <button onClick={handleFollow} disabled={processing}>
+            {processing ? "Following..." : "Follow"}
+          </button>
+        )
+      )}
     </div>
   );
 };
