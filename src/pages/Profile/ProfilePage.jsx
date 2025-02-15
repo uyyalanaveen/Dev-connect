@@ -15,7 +15,7 @@ const ProfilePage = () => {
     if (isAuthenticated()) {
       const token = localStorage.getItem("authToken");
       
-      axios.get(`http://localhost:5000/api/users/${id}`)
+      axios.get(`https://dev-conncet-backend.onrender.com/api/users/${id}`)
         .then((response) => {
           setUser(response.data);
           setLoading(false);
@@ -25,7 +25,7 @@ const ProfilePage = () => {
           setLoading(false);
         });
       
-      axios.get("http://localhost:5000/api/current-user", {
+      axios.get("https://dev-conncet-backend.onrender.com/api/current-user", {
         headers: { Authorization: `Bearer ${token}` },
       }).then((response) => {
         setCurrentUser(response.data);
@@ -38,7 +38,7 @@ const ProfilePage = () => {
     setProcessing(true);
     try {
       const token = localStorage.getItem("authToken");
-      await axios.post("http://localhost:5000/api/users/add-friend", { followId: id }, {
+      await axios.post("https://dev-conncet-backend.onrender.com/api/users/add-friend", { followId: id }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUser((prev) => ({ ...prev, followers: [...prev.followers, currentUser._id] }));
@@ -55,7 +55,7 @@ const ProfilePage = () => {
     setProcessing(true);
     try {
       const token = localStorage.getItem("authToken");
-      await axios.delete("http://localhost:5000/api/users/remove-friend", {
+      await axios.delete("https://dev-conncet-backend.onrender.com/api/users/remove-friend", {
         data: { unfollowId: id },
         headers: { Authorization: `Bearer ${token}` },
       });

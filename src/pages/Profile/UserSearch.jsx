@@ -22,7 +22,7 @@ const UserSearch = () => {
           return;
         }
 
-        const response = await axios.get("http://localhost:5000/api/userslist", {
+        const response = await axios.get("https://dev-conncet-backend.onrender.com/api/userslist", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -53,7 +53,7 @@ const UserSearch = () => {
       if (!token) return console.error("No auth token found.");
 
       await axios.post(
-        "http://localhost:5000/api/users/add-friend",
+        "https://dev-conncet-backend.onrender.com/api/users/add-friend",
         { followId: userId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -80,7 +80,7 @@ const UserSearch = () => {
       const token = localStorage.getItem("authToken");
       if (!token) return console.error("No auth token found.");
 
-      await axios.delete("http://localhost:5000/api/users/remove-friend", {
+      await axios.delete("https://dev-conncet-backend.onrender.com/api/users/remove-friend", {
         data: { unfollowId: userId },
         headers: { Authorization: `Bearer ${token}` },
       });
