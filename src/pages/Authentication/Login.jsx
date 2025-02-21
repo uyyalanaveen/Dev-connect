@@ -27,9 +27,8 @@ const Login = () => {
 
       const data = await response.json();
 
-      if (response.ok && data.token) {
-        setAuthToken(data.token); // Save token after successful login
-        // Successful login, redirect to home page
+      if (response.ok && data.token ) {
+        setAuthToken(data.token); 
         toast.success('Login successful!');
         console.log('Login successful:', data);
         navigate('/home'); // Redirect to homepage ("/")

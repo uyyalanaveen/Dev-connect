@@ -1,201 +1,206 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Mic, MicOff, PhoneOff } from "lucide-react";
+import { motion } from "framer-motion";
 import io from "socket.io-client";
 
-const socket = io("https://dev-conncet-backend.onrender.com"); // Backend URL
+const socket = io("https://dev-conncet-backend.onrender.com");
 
 const Room = () => {
   const { id: roomId } = useParams();
   const navigate = useNavigate();
   const [room, setRoom] = useState(null);
-  const [participants, setParticipants] = useState([]);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOn, setIsVideoOn] = useState(true);
-  const [remoteStreams, setRemoteStreams] = useState({});
+  const [error, setError] = useState(null);
+  const [stream, setStream] = useState(null);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(false);
+  const [users, setUsers] = useState([]);
 
-  const localVideoRef = useRef(null);
-  const localStreamRef = useRef(null);
   const peerConnections = useRef({});
 
   useEffect(() => {
-    const fetchRoomDetails = async () => {
-      try {
-        const token = localStorage.getItem("authToken");
-        if (!token) throw new Error("User is not authenticated.");
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    const userId = user?._id;
+    if (!userId) {
+      setError("User not authenticated");
+      return;
+    }
 
-        const response = await fetch(`https://dev-conncet-backend.onrender.com/api/get-room/${roomId}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        });
+    socket.emit("join-room", { roomId, userId });
 
-        if (!response.ok) throw new Error(`HTTP Error! Status: ${response.status}`);
+    socket.on("new-user", ({ userId }) => {
+      setUsers((prev) => [...prev, { userId }]);
+      initiateWebRTCConnection(userId);
+    });
 
-        const data = await response.json();
-        setRoom(data);
-        setParticipants(data.participants || []);
-      } catch (error) {
-        console.error("Error fetching room:", error);
+    socket.on("user-left", ({ userId }) => {
+      setUsers((prev) => prev.filter((user) => user.userId !== userId));
+      if (peerConnections.current[userId]) {
+        peerConnections.current[userId].close();
+        delete peerConnections.current[userId];
       }
-    };
+    });
 
     fetchRoomDetails();
-  }, [roomId]);
-
-  useEffect(() => {
-    const setupWebRTC = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        localStreamRef.current = stream;
-        if (localVideoRef.current) localVideoRef.current.srcObject = stream;
-
-        socket.emit("join-room", roomId);
-
-        socket.on("user-joined", (userId) => {
-          console.log(`New user joined: ${userId}`);
-          createPeerConnection(userId, stream);
-          sendOffer(userId);
-        });
-
-        socket.on("receive-offer", handleReceiveOffer);
-        socket.on("receive-answer", handleReceiveAnswer);
-        socket.on("receive-ice-candidate", handleNewICECandidate);
-      } catch (error) {
-        console.error("Error setting up WebRTC:", error);
-      }
-    };
-
-    setupWebRTC();
+    initializeAudio();
 
     return () => {
-      Object.values(peerConnections.current).forEach((pc) => pc.close());
-      socket.disconnect();
+      socket.emit("leave-room", { roomId, userId });
+      Object.values(peerConnections.current).forEach((peer) => peer.close());
     };
   }, [roomId]);
 
-  const createPeerConnection = (userId, stream) => {
-    const peerConnection = new RTCPeerConnection();
-
-    stream.getTracks().forEach((track) => peerConnection.addTrack(track, stream));
-
-    peerConnection.onicecandidate = (event) => {
-      if (event.candidate) {
-        socket.emit("ice-candidate", { candidate: event.candidate, to: userId, roomId });
-      }
-    };
-
-    peerConnection.ontrack = (event) => {
-      const remoteStream = event.streams[0];
-      setRemoteStreams((prev) => ({
-        ...prev,
-        [userId]: remoteStream,
-      }));
-    };
-
-    peerConnections.current[userId] = peerConnection;
-  };
-
-  const sendOffer = async (userId) => {
-    const peerConnection = peerConnections.current[userId];
-    if (!peerConnection) return;
-
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
-
-    socket.emit("offer", { offer, to: userId, roomId });
-  };
-
-  const handleReceiveOffer = async ({ offer, from }) => {
-    const peerConnection = new RTCPeerConnection();
-
-    localStreamRef.current.getTracks().forEach((track) => peerConnection.addTrack(track, localStreamRef.current));
-
-    peerConnection.onicecandidate = (event) => {
-      if (event.candidate) {
-        socket.emit("ice-candidate", { candidate: event.candidate, to: from, roomId });
-      }
-    };
-
-    peerConnection.ontrack = (event) => {
-      const remoteStream = event.streams[0];
-      setRemoteStreams((prev) => ({
-        ...prev,
-        [from]: remoteStream,
-      }));
-    };
-
-    peerConnections.current[from] = peerConnection;
-
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-
-    socket.emit("answer", { answer, to: from, roomId });
-  };
-
-  const handleReceiveAnswer = async ({ answer, from }) => {
-    const peerConnection = peerConnections.current[from];
-    if (peerConnection) {
-      await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
-    }
-  };
-
-  const handleNewICECandidate = async ({ candidate, from }) => {
-    const peerConnection = peerConnections.current[from];
-    if (peerConnection && candidate) {
-      await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-    }
-  };
-
-  const toggleMute = () => {
-    const audioTracks = localStreamRef.current.getAudioTracks();
-    audioTracks.forEach((track) => (track.enabled = !track.enabled));
-    setIsMuted(!isMuted);
-  };
-
-  const toggleVideo = () => {
-    const videoTracks = localStreamRef.current.getVideoTracks();
-    videoTracks.forEach((track) => (track.enabled = !track.enabled));
-    setIsVideoOn(!isVideoOn);
-  };
-
-  const leaveRoom = async () => {
+  // ✅ Fetch Room Details (with Debugging)
+  const fetchRoomDetails = async () => {
     try {
       const token = localStorage.getItem("authToken");
-      await fetch(`https://dev-conncet-backend.onrender.com/api/room/leave-room/${roomId}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      const response = await fetch(`https://dev-conncet-backend.onrender.com/api/get-room/${roomId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
 
-      navigate("/");
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+      const data = await response.json();
+      console.log("Room Data:", data);  // ✅ Debugging API Response
+
+      setRoom(data);
+      setUsers(data.participants || []);
     } catch (error) {
-      console.error("Error leaving room:", error);
+      setError("Error fetching room details");
+    }
+  };
+
+  const initializeAudio = async () => {
+    try {
+      const userStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      userStream.getAudioTracks()[0].enabled = false;
+      setStream(userStream);
+    } catch (error) {
+      setError("Could not access microphone");
+    }
+  };
+
+  const initiateWebRTCConnection = (peerId) => {
+    const userId = JSON.parse(sessionStorage.getItem("user"))?._id;
+    if (!userId || peerId === userId) return;
+
+    const peer = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    });
+
+    peerConnections.current[peerId] = peer;
+
+    if (stream) {
+      stream.getTracks().forEach((track) => peer.addTrack(track, stream));
+    }
+
+    peer.ontrack = (event) => {
+      const remoteAudio = new Audio();
+      remoteAudio.srcObject = event.streams[0];
+      remoteAudio.play();
+    };
+
+    peer.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit("ice-candidate", { roomId, candidate: event.candidate, senderId: userId });
+      }
+    };
+
+    peer.createOffer().then((offer) => {
+      peer.setLocalDescription(offer);
+      socket.emit("offer", { roomId, offer, senderId: userId });
+    });
+  };
+
+  socket.on("offer", async ({ offer, senderId }) => {
+    const peer = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    });
+
+    peerConnections.current[senderId] = peer;
+
+    if (stream) {
+      stream.getTracks().forEach((track) => peer.addTrack(track, stream));
+    }
+
+    peer.ontrack = (event) => {
+      const remoteAudio = new Audio();
+      remoteAudio.srcObject = event.streams[0];
+      remoteAudio.play();
+    };
+
+    peer.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit("ice-candidate", { roomId, candidate: event.candidate, senderId: localStorage.getItem("userId") });
+      }
+    };
+
+    await peer.setRemoteDescription(new RTCSessionDescription(offer));
+    const answer = await peer.createAnswer();
+    await peer.setLocalDescription(answer);
+
+    socket.emit("answer", { roomId, answer, senderId: localStorage.getItem("userId") });
+  });
+
+  socket.on("answer", ({ answer, senderId }) => {
+    if (peerConnections.current[senderId]) {
+      peerConnections.current[senderId].setRemoteDescription(new RTCSessionDescription(answer));
+    }
+  });
+
+  socket.on("ice-candidate", ({ candidate, senderId }) => {
+    if (peerConnections.current[senderId]) {
+      peerConnections.current[senderId].addIceCandidate(new RTCIceCandidate(candidate));
+    }
+  });
+
+  const toggleAudio = () => {
+    if (stream) {
+      const audioTrack = stream.getAudioTracks()[0];
+      audioTrack.enabled = !audioTrack.enabled;
+      setIsAudioEnabled(audioTrack.enabled);
     }
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", justifyContent: "space-between", padding: "20px" }}>
-      <h2 style={{ textAlign: "center" }}>{room?.name || "Loading..."}</h2>
+    <div className="flex flex-col h-screen bg-gray-900 text-white items-center justify-center p-6">
+      {error && <p className="text-red-500 text-center">Error: {error}</p>}
+      {room ? (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-2xl">
+          <h2 className="text-3xl font-bold mt-4">{room.name}</h2>
+          
+          {/* ✅ Displaying User Profile and Full Name */}
+          <div className="flex flex-wrap justify-center gap-4 mt-4">
+            {Array.isArray(users) && users.length > 0 ? (
+              users.map((participant) => (
+                <motion.div key={participant.userId._id} className="p-3 rounded-lg bg-gray-800 border-2 border-white">
+                  <img 
+                    src={participant.userId.profileImage || "https://via.placeholder.com/50"} 
+                    alt="Profile" 
+                    className="w-12 h-12 rounded-full mx-auto"
+                  />
+                  <p className="text-sm text-center">{participant.userId.fullname || "Unknown User"}</p>
+                </motion.div>
+              ))
+            ) : (
+              <p className="text-gray-400">No participants yet</p>
+            )}
+          </div>
 
-      {/* Video Section */}
-      <div style={{ display: "flex", justifyContent: "center", gap: "20px", padding: "20px" }}>
-        <video ref={localVideoRef} autoPlay playsInline muted style={{ width: "300px", borderRadius: "10px", backgroundColor: "black" }} />
-        {Object.keys(remoteStreams).map((userId) => (
-          <video key={userId} ref={(el) => { if (el) el.srcObject = remoteStreams[userId]; }} autoPlay playsInline style={{ width: "300px", borderRadius: "10px", backgroundColor: "black" }} />
-        ))}
-      </div>
-
-      {/* Controls */}
-      <div style={{ display: "flex", justifyContent: "center", gap: "15px", padding: "15px" }}>
-        <button onClick={toggleMute} style={{ padding: "10px", backgroundColor: isMuted ? "gray" : "blue", color: "white", border: "none", borderRadius: "5px" }}>
-          {isMuted ? "Unmute" : "Mute"}
-        </button>
-        <button onClick={toggleVideo} style={{ padding: "10px", backgroundColor: isVideoOn ? "blue" : "gray", color: "white", border: "none", borderRadius: "5px" }}>
-          {isVideoOn ? "Turn Off Video" : "Turn On Video"}
-        </button>
-        <button onClick={leaveRoom} style={{ padding: "10px", backgroundColor: "red", color: "white", border: "none", borderRadius: "5px" }}>
-          End Call
-        </button>
-      </div>
+          <div className="fixed bottom-5 flex gap-6 bg-gray-800 px-6 py-3 rounded-full">
+            <button onClick={toggleAudio} className={`p-4 rounded-full ${isAudioEnabled ? "bg-blue-500" : "bg-red-500"}`}>
+              {isAudioEnabled ? <Mic size={24} /> : <MicOff size={24} />}
+            </button>
+            <button onClick={() => navigate("/")} className="p-4 rounded-full bg-red-500">
+              <PhoneOff size={24} />
+            </button>
+          </div>
+        </motion.div>
+      ) : (
+        <p className="text-center text-lg font-semibold">Loading...</p>
+      )}
     </div>
   );
 };
