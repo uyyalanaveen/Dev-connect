@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Mic, MicOff, PhoneOff } from "lucide-react";
 import io from "socket.io-client";
 
-const socket = io("http://localhost:5000");
+const socket = io("https://dev-conncet-backend.onrender.com");
 
 const Room = () => {
   const { id: roomId } = useParams();
