@@ -12,34 +12,47 @@ const Room = () => {
   const [users, setUsers] = useState([]);
   const [stream, setStream] = useState(null);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
-  const peerConnections = useRef({}); // Store all peer connections
+  const peerConnections = useRef({});
+  const audioElements = useRef({});
 
   useEffect(() => {
     const user = JSON.parse(sessionStorage.getItem("user"));
-    const userId = user?._id;
-    if (!userId) return;
+    if (!user || !user._id) return;
+    const userId = user._id;
 
     socket.emit("join-room", { roomId, userId });
 
-    // Listen for new users
+    // Get user media (audio only)
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((userStream) => {
+      userStream.getAudioTracks()[0].enabled = false; // Start muted
+      setStream(userStream);
+      socket.emit("request-existing-users", { roomId, newUserId: userId });
+    });
+
+    // New user joins
     socket.on("new-user", ({ userId }) => {
       setUsers((prev) => [...prev, { userId }]);
       createPeerConnection(userId, true);
     });
 
-    // When a user leaves, remove them
+    // Existing users
+    socket.on("existing-users", ({ existingUsers }) => {
+      existingUsers.forEach(({ userId }) => {
+        createPeerConnection(userId, true);
+      });
+    });
+
+    // User leaves
     socket.on("user-left", ({ userId }) => {
       if (peerConnections.current[userId]) {
         peerConnections.current[userId].close();
         delete peerConnections.current[userId];
       }
+      if (audioElements.current[userId]) {
+        document.body.removeChild(audioElements.current[userId]);
+        delete audioElements.current[userId];
+      }
       setUsers((prev) => prev.filter((user) => user.userId !== userId));
-    });
-
-    // Get media stream
-    navigator.mediaDevices.getUserMedia({ audio: true }).then((userStream) => {
-      userStream.getAudioTracks()[0].enabled = false;
-      setStream(userStream);
     });
 
     return () => {
@@ -50,6 +63,7 @@ const Room = () => {
       socket.off("offer");
       socket.off("answer");
       socket.off("ice-candidate");
+      socket.off("existing-users");
     };
   }, [roomId]);
 
@@ -63,51 +77,78 @@ const Room = () => {
 
     peerConnections.current[peerId] = peer;
 
-    // Add local audio track to the peer connection
     if (stream) {
       stream.getTracks().forEach((track) => peer.addTrack(track, stream));
     }
 
     peer.ontrack = (event) => {
-      const remoteAudio = new Audio();
-      remoteAudio.srcObject = event.streams[0];
-      remoteAudio.play();
+      if (event.streams && event.streams[0]) {
+        console.log(`🎙️ Audio received from ${peerId}`);
+        let remoteAudio = document.createElement("audio");
+        remoteAudio.srcObject = event.streams[0];
+        remoteAudio.autoplay = true;
+        remoteAudio.play().catch((e) => console.error("Audio playback error:", e));
+
+        document.body.appendChild(remoteAudio);
+        audioElements.current[peerId] = remoteAudio;
+      }
     };
 
     peer.onicecandidate = (event) => {
       if (event.candidate) {
-        socket.emit("ice-candidate", { roomId, candidate: event.candidate, senderId: sessionStorage.getItem("userId") });
+        socket.emit("ice-candidate", { roomId, candidate: event.candidate, senderId: JSON.parse(sessionStorage.getItem("user"))._id });
       }
     };
 
     if (isOfferer) {
       peer.createOffer().then((offer) => {
         peer.setLocalDescription(offer);
-        socket.emit("offer", { roomId, offer, senderId: sessionStorage.getItem("userId") });
+        socket.emit("offer", { roomId, offer, senderId: JSON.parse(sessionStorage.getItem("user"))._id });
       });
     }
   };
 
   // 🔹 Handle WebRTC Offers
   socket.on("offer", async ({ offer, senderId }) => {
-    createPeerConnection(senderId, false);
-    await peerConnections.current[senderId].setRemoteDescription(new RTCSessionDescription(offer));
-    const answer = await peerConnections.current[senderId].createAnswer();
-    await peerConnections.current[senderId].setLocalDescription(answer);
-    socket.emit("answer", { roomId, answer, senderId: sessionStorage.getItem("userId") });
+    if (!peerConnections.current[senderId]) {
+      createPeerConnection(senderId, false);
+    }
+
+    const peer = peerConnections.current[senderId];
+
+    if (peer.signalingState !== "stable") {
+      console.warn("Skipping offer, already stable.");
+      return;
+    }
+
+    try {
+      await peer.setRemoteDescription(new RTCSessionDescription(offer));
+      const answer = await peer.createAnswer();
+      await peer.setLocalDescription(answer);
+      socket.emit("answer", { roomId, answer, senderId: JSON.parse(sessionStorage.getItem("user"))._id });
+    } catch (error) {
+      console.error("Error handling offer:", error);
+    }
   });
 
-  // 🔹 Handle WebRTC Answers
   socket.on("answer", ({ answer, senderId }) => {
-    if (peerConnections.current[senderId]) {
-      peerConnections.current[senderId].setRemoteDescription(new RTCSessionDescription(answer));
+    const peer = peerConnections.current[senderId];
+
+    if (!peer) return;
+
+    if (peer.signalingState === "stable") {
+      console.warn("Skipping answer, already stable.");
+      return;
     }
+
+    peer.setRemoteDescription(new RTCSessionDescription(answer)).catch(console.error);
   });
 
   // 🔹 Handle ICE Candidates
   socket.on("ice-candidate", ({ candidate, senderId }) => {
-    if (peerConnections.current[senderId]) {
-      peerConnections.current[senderId].addIceCandidate(new RTCIceCandidate(candidate));
+    const peer = peerConnections.current[senderId];
+    if (peer) {
+      peer.addIceCandidate(new RTCIceCandidate(candidate));
     }
   });
 
