@@ -92,7 +92,7 @@ const Room = () => {
   const token = localStorage.getItem('authToken');
   const fetchRoomData = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/get-room/${roomId}`, {
+      const response = await fetch(`https://dev-conncet-backend.onrender.com/api/get-room/${roomId}`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
