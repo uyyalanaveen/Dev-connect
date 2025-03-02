@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import '@fontsource/poppins/700.css';
+import "@fontsource/poppins";
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import Layout from '../Layout.jsx'
 import Hero from './pages/Hero/Hero.jsx'
