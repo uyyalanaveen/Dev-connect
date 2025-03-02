@@ -1236,7 +1236,7 @@ const Room = () => {
   // Fetch room details from server
   const fetchRoomDetails = async (token, roomId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/get-room/${roomId}`, {
+      const response = await fetch(`https://devconnect-backend-6opy.onrender.com/api/get-room/${roomId}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -1367,7 +1367,7 @@ const Room = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/room/leave-room/${roomId}`, {
+      const response = await fetch(`https://devconnect-backend-6opy.onrender.com/api/room/leave-room/${roomId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
