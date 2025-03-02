@@ -12,7 +12,7 @@ const ForgetPassword = () => {
   const [step, setStep] = useState(1); // 1: Request OTP, 2: Validate OTP, 3: Set New Password
   const navigate = useNavigate();
 
-  const API_URL = 'https://dev-conncet-backend.onrender.com/api';
+  const API_URL = 'https://devconnect-backend-6opy.onrender.com/api';
   const handleRequestOTP = async (e) => {
     e.preventDefault();
 

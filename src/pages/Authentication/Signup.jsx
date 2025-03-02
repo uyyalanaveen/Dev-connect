@@ -5,6 +5,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import profileimage from '../../assets/Profile.png'
+// import { setAuthToken } from '../../utility/auth.js';
+
 
 
 const Signup = () => {
@@ -74,6 +76,7 @@ const Signup = () => {
     try {
       const data = await signupUser(fullname, email, password);
       if (data.token) {
+        // setAuthToken(data.token);
         toast.success('Signup successful! Redirecting...');
         navigate('/login');
       } else {

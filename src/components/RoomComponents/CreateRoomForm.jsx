@@ -63,7 +63,7 @@ const CreateRoomForm = ({ onRoomCreated, onClose, createdBy }) => {
         createdBy: createdBy, // Include createdBy in the payload
       };
 
-      const response = await axios.post("https://dev-conncet-backend.onrender.com/api/create-room", newRoom, {
+      const response = await axios.post("https://devconnect-backend-6opy.onrender.com/api/create-room", newRoom, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

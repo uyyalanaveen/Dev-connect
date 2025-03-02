@@ -1,4 +1,5 @@
-const API_URL = 'https://dev-conncet-backend.onrender.com/api'; // Backend URL
+const API_URL = 'https://devconnect-backend-6opy.onrender.com/api'; // Backend URL
+
 
 export const signupUser = async (fullname, email, password) => {
   try {

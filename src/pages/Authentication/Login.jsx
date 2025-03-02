@@ -3,6 +3,8 @@ import Input from '../../components/Input';
 import { useNavigate,Link } from 'react-router-dom'; // Import useNavigate
 import { setAuthToken } from '../../utility/auth'; // Import auth utility
 import { ToastContainer, toast } from 'react-toastify';
+
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,7 +19,7 @@ const Login = () => {
     setError(''); // Reset error message
 
     try {
-      const response = await fetch('https://dev-conncet-backend.onrender.com/api/login', {
+      const response = await fetch('https://devconnect-backend-6opy.onrender.com/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -42,7 +44,7 @@ const Login = () => {
       toast.error('Something went wrong. Please try again.');
       setError('Something went wrong. Please try again.');
     } finally {
-      setLoading(false); // Hide loading indicator
+      setLoading(false); 
     }
   };
 

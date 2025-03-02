@@ -20,7 +20,7 @@ const RoomCard = ({
   useEffect(() => {
     const fetchRoomDetails = async () => {
       try {
-        const response = await fetch(`https://dev-conncet-backend.onrender.com/api/get-room/${roomId}`, {
+        const response = await fetch(`https://devconnect-backend-6opy.onrender.com/api/get-room/${roomId}`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
@@ -45,28 +45,28 @@ const RoomCard = ({
     setError('');
 
     try {
-      const response = await fetch(`https://dev-conncet-backend.onrender.com/api/room/${roomId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        },
-        credentials: 'include'
-      });
+      // const response = await fetch(`https://dev-conncet-backend.onrender.com/api/room/${roomId}`, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      //   },
+      //   credentials: 'include'
+      // });
 
-      let data;
-      try {
-        data = await response.json();
-        console.log(data)
-      } catch {
-        throw new Error('Server returned an invalid response');
-      }
+      // let data;
+      // try {
+      //   data = await response.json();
+      //   console.log(data)
+      // } catch {
+      //   throw new Error('Server returned an invalid response');
+      // }
 
-      if (!response.ok) {
-        throw new Error(data?.message || 'Failed to join room');
-      }
+      // if (!response.ok) {
+      //   throw new Error(data?.message || 'Failed to join room');
+      // }
 
-      onJoinSuccess?.(data.room);
+      // onJoinSuccess?.(data.room);
       navigate(`/room/${roomId}`);
     } catch (err) {
       setError(err.message);
@@ -116,7 +116,7 @@ const RoomCard = ({
             users.map((participant, index) => (
               <div key={index} className="flex items-center space-x-2 p-2 rounded-lg bg-gray-800/50">
                 <img
-                  src={participant?.userId.profileImage || '../../assests/profile.png'}
+                  src={participant?.userId?.profileImage || '../../assests/profile.png'}
                   alt={participant?.fullname || 'User'}
                   className="h-8 w-8 rounded-full object-cover"
                 />
