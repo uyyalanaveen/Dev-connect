@@ -11,6 +11,7 @@ const CreateRoomForm = ({ onRoomCreated, onClose, createdBy }) => {
     technologies: [],
     otherTechnology: "",
     isPrivate: false,
+    password: "", // Added password field
   });
 
   // Handle input changes
@@ -44,6 +45,9 @@ const CreateRoomForm = ({ onRoomCreated, onClose, createdBy }) => {
     if (formData.technologies.includes("Others") && !formData.otherTechnology.trim()) {
       errors.push("Please specify the other technology");
     }
+    if (formData.isPrivate && !formData.password.trim()) {
+      errors.push("Password is required for private rooms");
+    }
 
     if (errors.length > 0) {
       errors.forEach((error) => toast.error(error));
@@ -60,7 +64,8 @@ const CreateRoomForm = ({ onRoomCreated, onClose, createdBy }) => {
           ? [...formData.technologies.filter((t) => t !== "Others"), formData.otherTechnology]
           : formData.technologies,
         isPrivate: formData.isPrivate,
-        createdBy: createdBy, // Include createdBy in the payload
+        password: formData.isPrivate ? formData.password : "", // Only send password if room is private
+        createdBy: createdBy,
       };
 
       const response = await axios.post("https://devconnect-backend-6opy.onrender.com/api/create-room", newRoom, {
@@ -85,7 +90,7 @@ const CreateRoomForm = ({ onRoomCreated, onClose, createdBy }) => {
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50" onClick={onClose}>
       <div className="bg-black border border-white p-8 rounded-md shadow-lg w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-2xl mb-4 text-white">Create Room</h2>
-        <p className="text-white mb-4">Created By: {createdBy}</p> {/* ✅ Display "Created By" */}
+        <p className="text-white mb-4">Created By: {createdBy}</p>
 
         <form className="space-y-4">
           <input
@@ -153,6 +158,17 @@ const CreateRoomForm = ({ onRoomCreated, onClose, createdBy }) => {
               />
             </label>
           </div>
+
+          {formData.isPrivate && (
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              className="w-full p-2 border border-gray-300 rounded bg-black text-white"
+              placeholder="Room Password"
+            />
+          )}
 
           <button
             type="button"

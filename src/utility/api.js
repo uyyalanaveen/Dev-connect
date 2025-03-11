@@ -4,26 +4,21 @@ const API_URL = 'https://devconnect-backend-6opy.onrender.com/api'; // Backend U
 export const signupUser = async (fullname, email, password) => {
   try {
     const response = await fetch(`${API_URL}/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fullname, email, password }),
     });
 
-    // Log response for debugging
-    console.log('API Response:', response);
+    const data = await response.json(); // Consume once
 
     if (!response.ok) {
-      const errorData = await response.json(); // Get the error message from backend
-      throw new Error(errorData.message || 'Failed to register user');
+      throw new Error(data.message || "Failed to register user");
     }
 
-    const data = await response.json();
-    console.log('Response Data:', data);
+    console.log("Response Data:", data);
     return data;
   } catch (error) {
-    console.error('Error in signupUser:', error);
+    console.error("Signup Error:", error.message);
     throw new Error(error.message);
   }
 };

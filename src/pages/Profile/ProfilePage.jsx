@@ -29,7 +29,20 @@ const ProfilePage = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Ensure the user data structure matches your needs
+      // Get the current user data
+      const userDataStr = sessionStorage.getItem('user');
+      let currentUserData = null;
+      if (userDataStr) {
+        try {
+          currentUserData = JSON.parse(userDataStr);
+          setCurrentUser(currentUserData);
+        } catch (error) {
+          console.error("Error parsing user data:", error);
+          sessionStorage.removeItem('user');
+        }
+      }
+      
+      // Process followers and following data from the populated response
       const userData = {
         _id: response.data.id,
         fullname: response.data.fullname || "Anonymous User",
@@ -38,20 +51,29 @@ const ProfilePage = () => {
         followers: Array.isArray(response.data.followers) ? response.data.followers : [],
         following: Array.isArray(response.data.following) ? response.data.following : [],
         techStack: Array.isArray(response.data.techStack) ? response.data.techStack : [],
-        bio: response.data.bio || ""
+        bio: response.data.bio || "" // Ensure bio is properly extracted from response
       };
       
+      console.log("User bio from API:", response.data.bio); // Debug log
       setUser(userData);
       
-      // Load followers and following details if arrays are not empty
-      if (userData.followers.length > 0) {
-        await loadFollowersData(userData.followers);
+      // Set followers and following data directly from the populated response
+      if (Array.isArray(response.data.followers)) {
+        setFollowersData(response.data.followers.map(follower => ({
+          _id: follower._id || follower.id,
+          fullname: follower.fullname || "User",
+          profileImage: follower.profileImage || ""
+        })));
       } else {
         setFollowersData([]);
       }
       
-      if (userData.following.length > 0) {
-        await loadFollowingData(userData.following);
+      if (Array.isArray(response.data.following)) {
+        setFollowingData(response.data.following.map(following => ({
+          _id: following._id || following.id,
+          fullname: following.fullname || "User",
+          profileImage: following.profileImage || ""
+        })));
       } else {
         setFollowingData([]);
       }
@@ -63,72 +85,6 @@ const ProfilePage = () => {
     }
   };
 
-  const loadFollowersData = async (followerIds) => {
-    if (!followerIds || !followerIds.length) {
-      setFollowersData([]);
-      return;
-    }
-    
-    try {
-      const token = localStorage.getItem("authToken");
-      const followers = await Promise.all(followerIds.map(async (id) => {
-        try {
-          const response = await axios.get(`${API_BASE_URL}/api/users/${id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          
-          return {
-            _id: response.data.id,
-            fullname: response.data.fullname || "User",
-            profileImage: response.data.profileImage || ""
-          };
-        } catch (err) {
-          console.error(`Error fetching follower ${id}:`, err);
-          return null;
-        }
-      }));
-      
-      // Filter out any null values (failed requests)
-      setFollowersData(followers.filter(f => f !== null));
-    } catch (error) {
-      console.error("Error loading followers data:", error);
-      toast.error("Failed to load followers data");
-    }
-  };
-
-  const loadFollowingData = async (followingIds) => {
-    if (!followingIds || !followingIds.length) {
-      setFollowingData([]);
-      return;
-    }
-    
-    try {
-      const token = localStorage.getItem("authToken");
-      const following = await Promise.all(followingIds.map(async (id) => {
-        try {
-          const response = await axios.get(`${API_BASE_URL}/api/users/${id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          
-          return {
-            _id: response.data.id,
-            fullname: response.data.fullname || "User",
-            profileImage: response.data.profileImage || ""
-          };
-        } catch (err) {
-          console.error(`Error fetching following ${id}:`, err);
-          return null;
-        }
-      }));
-      
-      // Filter out any null values (failed requests)
-      setFollowingData(following.filter(f => f !== null));
-    } catch (error) {
-      console.error("Error loading following data:", error);
-      toast.error("Failed to load following data");
-    }
-  };
-
   useEffect(() => {
     // Reset data when id changes
     setUser(null);
@@ -136,23 +92,7 @@ const ProfilePage = () => {
     setFollowingData([]);
     setLoading(true);
     
-    const loadData = async () => {
-      await loadProfileData();
-      // Get current user data from session storage
-      const userDataStr = sessionStorage.getItem('user');
-      if (userDataStr) {
-        try {
-          const userData = JSON.parse(userDataStr);
-          setCurrentUser(userData);
-        } catch (error) {
-          console.error("Error parsing user data:", error);
-          // Clear invalid session data
-          sessionStorage.removeItem('user');
-        }
-      }
-    };
-
-    loadData();
+    loadProfileData();
   }, [id]); // Re-run when id parameter changes
 
   const handleFollow = async () => {
@@ -167,12 +107,24 @@ const ProfilePage = () => {
         { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
-      // Update user state with the new follower
-      setUser((prevUser) => ({
+      // Add current user to the profile's followers
+      const currentUserInfo = {
+        _id: currentUser._id,
+        fullname: currentUser.fullname || "User",
+        profileImage: currentUser.profileImage || ""
+      };
+      
+      // Update UI immediately
+      setUser(prevUser => ({
         ...prevUser,
-        followers: [...prevUser.followers, currentUser._id],
+        followers: [...prevUser.followers, { 
+          _id: currentUser._id, 
+          id: currentUser._id 
+        }]
       }));
-
+      
+      setFollowersData(prevData => [...prevData, currentUserInfo]);
+      
       toast.success("User followed successfully!");
     } catch (error) {
       console.error("Follow error:", error);
@@ -193,11 +145,17 @@ const ProfilePage = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // Update user state by removing the unfollowed user ID
-      setUser((prevUser) => ({
+      // Update UI immediately - remove current user from followers
+      setUser(prevUser => ({
         ...prevUser,
-        followers: prevUser.followers.filter(followerId => followerId !== currentUser._id),
+        followers: prevUser.followers.filter(follower => 
+          (follower._id || follower.id) !== currentUser._id
+        )
       }));
+      
+      setFollowersData(prevData => 
+        prevData.filter(follower => follower._id !== currentUser._id)
+      );
 
       toast.success("User unfollowed successfully!");
     } catch (error) {
@@ -210,7 +168,11 @@ const ProfilePage = () => {
 
   const isFollowing = () => {
     if (!user?.followers || !currentUser?._id) return false;
-    return user.followers.includes(currentUser._id);
+    
+    // Check if current user is in the followers array
+    return user.followers.some(follower => 
+      (follower._id || follower.id) === currentUser._id
+    );
   };
 
   if (loading) {
@@ -281,12 +243,15 @@ const ProfilePage = () => {
               </div>
             )}
           </div>
-          {user.bio && (
-            <div className="mt-6">
-              <h2 className="text-xl font-semibold mb-2">About</h2>
-              <p className="text-gray-300">{user.bio}</p>
-            </div>
-          )}
+
+          {/* Bio Section - Always show the container but conditionally show content or a placeholder */}
+          <div className="mt-6">
+            <h2 className="text-xl font-semibold mb-2">About</h2>
+            <p className="text-gray-300">
+              {user.bio ? user.bio : "No bio provided"}
+            </p>
+          </div>
+
           <div className="mt-6 flex justify-start gap-8">
             <div className="text-center cursor-pointer" onClick={() => setShowFollowers(true)}>
               <span className="block text-2xl font-bold">{user.followers.length}</span>

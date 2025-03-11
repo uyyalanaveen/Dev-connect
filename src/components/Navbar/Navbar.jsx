@@ -12,21 +12,41 @@ const Navbar = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
+        // Check both local storage and session storage
         const token = localStorage.getItem("authToken");
-        if (!token) return setLoading(false);
+        const sessionUser = sessionStorage.getItem("user");
         
+        // If there's a user in session storage, use that immediately
+        if (sessionUser) {
+          setUser(JSON.parse(sessionUser));
+          setLoading(false);
+        }
+        
+        // If no token, we're definitely not logged in
+        if (!token) {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+        
+        // Even if we have session user, still fetch from API to ensure freshness
         const response = await fetch("https://devconnect-backend-6opy.onrender.com/api/users/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        if (!response.ok) throw new Error("Failed to fetch user");
-        console.log(token)
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch user");
+        }
+        
         const data = await response.json();
         setUser(data.data.user);
         sessionStorage.setItem("user", JSON.stringify(data.data.user));
-        
       } catch (error) {
         console.error("Error fetching user data:", error);
+        // If API fetch fails, clear potentially invalid tokens
+        // localStorage.removeItem("authToken");
+        // sessionStorage.removeItem("user");
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -34,9 +54,17 @@ const Navbar = () => {
 
     fetchUserData();
     
-  }, []);
+    // Listen for storage events to handle login/logout in other tabs
+    const handleStorageChange = (e) => {
+      if (e.key === "authToken" || e.key === "user") {
+        fetchUserData();
+      }
+    };
+    
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [location.pathname]); // Re-fetch when route changes
 
-  // Close mobile menu when changing routes
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location]);
@@ -44,6 +72,7 @@ const Navbar = () => {
   const handleSignOut = () => {
     localStorage.removeItem("authToken");
     sessionStorage.removeItem("user");
+    setUser(null); // Immediately update UI
     window.location.href = "/login";
   };
 
@@ -51,7 +80,6 @@ const Navbar = () => {
     { name: "Home", path: "/", icon: <Home className="h-5 w-5" /> },
     { name: "Features", path: "/features", icon: <MdFeaturedPlayList className="h-5 w-5" /> },
     { name: "Search", path: "/search-users", icon: <Search className="h-5 w-5" /> },
-    // { name: "Messages", path: "/messages", icon: <MessageSquare className="h-5 w-5" /> },
   ];
 
   const isActive = (path) => {
@@ -88,17 +116,9 @@ const Navbar = () => {
                 <span>{name}</span>
               </Link>
             ))}
-
             {!loading && (
               user ? (
                 <div className="flex items-center pl-4 border-l border-gray-700 ml-2">
-                  {/* Notifications
-                  <button className="p-2 rounded-full hover:bg-gray-800 transition-colors mr-2 relative">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
-                  </button> */}
-                  
-                  {/* User Menu */}
                   <div className="relative group">
                     <Link
                       to="/update-profile"
@@ -111,17 +131,12 @@ const Navbar = () => {
                           <User className="h-5 w-5 text-white" />
                         )}
                       </div>
-                      <span className="font-medium">{user.fullname?.split(' ')[0]}</span>
+                      <span className="font-medium">{user.fullname?.split(' ')[0] || 'User'}</span>
                     </Link>
-                    
-                    {/* Dropdown Menu */}
                     <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform group-hover:translate-y-0 translate-y-2">
                       <Link to="/update-profile" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white">
                         Your Profile
                       </Link>
-                      {/* <Link to="/dashboard" className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white">
-                        Dashboard
-                      </Link> */}
                       <div className="border-t border-gray-700 my-1"></div>
                       <button
                         onClick={handleSignOut}
@@ -192,7 +207,7 @@ const Navbar = () => {
                       )}
                     </div>
                     <div>
-                      <span className="font-medium block">{user.fullname}</span>
+                      <span className="font-medium block">{user.fullname || 'User'}</span>
                       <span className="text-sm text-gray-400">View profile</span>
                     </div>
                   </Link>

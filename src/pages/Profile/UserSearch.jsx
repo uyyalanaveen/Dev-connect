@@ -119,11 +119,9 @@ const UserSearch = () => {
     user.fullname?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Function to determine if current user is following a user
   const isFollowing = (user) => {
     return currentUser && user.followers.includes(currentUser._id);
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 p-6 text-white">
       {/* Header Section */}
@@ -237,7 +235,7 @@ const UserSearch = () => {
                     </button>
                   )}
                   
-                  {/* View Profile Link */}
+                 
                   <Link 
                     to={`/profile/${user._id}`} 
                     className="block mt-3 text-blue-400 hover:text-blue-300 text-sm font-medium"

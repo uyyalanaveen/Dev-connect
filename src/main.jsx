@@ -7,8 +7,8 @@ import Layout from '../Layout.jsx'
 import Hero from './pages/Hero/Hero.jsx'
 import Signup from './pages/Authentication/Signup.jsx';
 import Login from './pages/Authentication/Login.jsx'
-import AuthRoute from './components/AuthRoute.jsx' // Import AuthRoute
-import { isAuthenticated } from './utility/auth.js'; // Import auth utility
+import AuthRoute from './components/AuthRoute.jsx' 
+import { isAuthenticated } from './utility/auth.js'; 
 import Home from './pages/Home/Home.jsx';
 import Contact from './pages/contact/Contact.jsx';
 import Forgetpassword from './pages/Authentication/Forgetpassword.jsx';
@@ -17,6 +17,7 @@ import ProfilePage from './pages/Profile/ProfilePage.jsx';
 import UserSearch from './pages/Profile/UserSearch.jsx';
 import UpdateProfilePage from './pages/Profile/UpdateProfile.jsx';
 import Room from './pages/Rooms/Room.jsx';
+import Chatbot from './pages/Home/Chatbot.jsx';
 
 
 
@@ -27,7 +28,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: '/',
-        element: isAuthenticated() ? <Navigate to="/home" /> : <Hero />, // Redirect to `/home` if authenticated
+        element: isAuthenticated() ? <Navigate to="/home" /> : <Hero />, 
       },
       {
         path: '/login',
@@ -51,7 +52,7 @@ const router = createBrowserRouter([
       },
       {
         path: '/home',
-        element:  <AuthRoute><Home /></AuthRoute> , // Auth-protected route
+        element:  <AuthRoute><Home /></AuthRoute> , 
       },
       {
         path: '/profile/:id',
@@ -73,6 +74,10 @@ const router = createBrowserRouter([
       {
         path : '/room/:id',
         element: <AuthRoute><Room /></AuthRoute>
+      },
+      {
+        path:'/chat',
+        element:<Chatbot />
       }
     ],
   },

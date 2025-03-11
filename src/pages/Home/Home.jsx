@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Plus, Loader2, Search, MessageCircle, X, MinusIcon } from 'lucide-react';
 import RoomCard from '../../components/Cards/RoomCard';
 import CreateRoomForm from '../../components/RoomComponents/CreateRoomForm';
-import Chatbot from './Chatbot';
 
 const Home = () => {
   const [rooms, setRooms] = useState([]);
@@ -12,8 +11,6 @@ const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
-  const [isChatMinimized, setIsChatMinimized] = useState(false);
 
   useEffect(() => {
     const storedUser = JSON.parse(sessionStorage.getItem("user"));
@@ -83,19 +80,7 @@ const Home = () => {
     setSearchTerm(e.target.value);
   };
 
-  const toggleChatbot = () => {
-    if (isChatMinimized) {
-      setIsChatMinimized(false);
-    } else {
-      setIsChatbotOpen(!isChatbotOpen);
-    }
-  };
-
-  const minimizeChatbot = (e) => {
-    e.stopPropagation();
-    setIsChatMinimized(true);
-  };
-
+  
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
@@ -161,70 +146,6 @@ const Home = () => {
           onClose={() => setIsModalOpen(false)} 
           createdBy={user?.fullname} 
         />
-      )}
-
-      {/* Improved Chatbot UI */}
-      {!isChatbotOpen && !isChatMinimized && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <button 
-            onClick={toggleChatbot}
-            className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg flex items-center justify-center transition-colors"
-            aria-label="Open chatbot"
-          >
-            <MessageCircle className="h-6 w-6" />
-          </button>
-        </div>
-      )}
-
-      {/* Minimized Chatbot */}
-      {isChatMinimized && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <div className="bg-blue-600 p-2 rounded-t-lg shadow-lg flex items-center justify-between">
-            <span className="text-white font-medium px-2">DevConnect Assistant</span>
-            <div className="flex">
-              <button 
-                onClick={toggleChatbot} 
-                className="text-white p-1 hover:bg-blue-700 rounded"
-                aria-label="Expand chatbot"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-              <button 
-                onClick={() => setIsChatbotOpen(false)} 
-                className="text-white p-1 hover:bg-blue-700 rounded"
-                aria-label="Close chatbot"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Chatbot Panel */}
-      {isChatbotOpen && (
-        <div className="">
-          <div className="flex justify-between items-center p-3 border-b border-gray-700 bg-gray-800 rounded-t-lg">
-            <h2 className="text-lg font-semibold">DevConnect Assistant</h2>
-            <div className="flex space-x-1">
-              <button 
-                onClick={minimizeChatbot} 
-                className="text-gray-400 hover:text-white p-1 rounded"
-                aria-label="Minimize chatbot"
-              >
-                <MinusIcon className="h-4 w-4" />
-              </button>
-              <button 
-                onClick={() => setIsChatbotOpen(false)} 
-                className="text-gray-400 hover:text-white p-1 rounded"
-                aria-label="Close chatbot"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-          <Chatbot />
-        </div>
       )}
     </div>
   );

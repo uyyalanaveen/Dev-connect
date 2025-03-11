@@ -4,6 +4,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { isAuthenticated } from '../../utility/auth';
 import { toast } from 'react-toastify';
 
+const API_BASE_URL = 'https://devconnect-backend-6opy.onrender.com';
+
 const UpdateProfilePage = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState({ 
@@ -26,94 +28,75 @@ const UpdateProfilePage = () => {
   const [showFollowing, setShowFollowing] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated()) {
-      setFetchLoading(true);
-      axios
-        .get('https://devconnect-backend-6opy.onrender.com/api/users/me', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
-        })
-        .then((response) => {
-          if (response.data.status) {
-            const userData = response.data.data.user;
-            // Ensure techStack is always an array
-            if (!userData.techStack) userData.techStack = [];
-            // Ensure bio exists
-            if (userData.bio === undefined || userData.bio === null) userData.bio = '';
-            setUser(userData);
-            
-            // Load followers and following data
-            if (userData.followers && userData.followers.length > 0) {
-              loadFollowersData(userData.followers);
-            }
-            
-            if (userData.following && userData.following.length > 0) {
-              loadFollowingData(userData.following);
-            }
-          }
-        })
-        .catch((error) => {
-          console.error('Error fetching user data:', error);
-          toast.error('Failed to load profile data');
-        })
-        .finally(() => {
-          setFetchLoading(false);
-        });
-    } else {
+    if (!isAuthenticated()) {
       navigate('/login');
+      return;
     }
+    
+    loadUserData();
   }, [navigate]);
 
-  const loadFollowersData = async (followerIds) => {
+  const loadUserData = async () => {
+    setFetchLoading(true);
     try {
-      const token = localStorage.getItem("authToken");
-      const followers = [];
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get(`${API_BASE_URL}/api/users/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       
-      for (const id of followerIds) {
-        const response = await axios.get(
-          `https://devconnect-backend-6opy.onrender.com/api/users/${id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+      if (response.data.status) {
+        const userData = response.data.data.user;
+        // Ensure techStack is always an array
+        if (!userData.techStack) userData.techStack = [];
+        // Ensure bio exists
+        if (userData.bio === undefined || userData.bio === null) userData.bio = '';
+        setUser(userData);
         
-        if (response.data) {
-          console.log(response.data)
-          followers.push({
-            _id: response.data.id,
-            fullname: response.data.fullname,
-            profileImage: response.data.profileImage
-          });
+        // Get populated followers data directly from endpoint
+        if (userData._id) {
+          await loadPopulatedUserData(userData._id);
         }
       }
-      
-      setFollowersData(followers);
     } catch (error) {
-      console.error("Error loading followers data:", error);
+      console.error('Error fetching user data:', error);
+      toast.error('Failed to load profile data');
+    } finally {
+      setFetchLoading(false);
     }
   };
 
-  const loadFollowingData = async (followingIds) => {
+  // Load fully populated user data including followers and following
+  const loadPopulatedUserData = async (userId) => {
     try {
-      const token = localStorage.getItem("authToken");
-      const following = [];
+      const token = localStorage.getItem('authToken');
+      const response = await axios.get(`${API_BASE_URL}/api/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
-      for (const id of followingIds) {
-        const response = await axios.get(
-          `https://devconnect-backend-6opy.onrender.com/api/users/${id}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        
-        if (response.data) {
-          // console.log(response.data)
-          following.push({
-            _id: response.data.id,
-            fullname: response.data.fullname,
-            profileImage: response.data.profileImage
-          });
-        }
+      // Process followers data from the populated response
+      if (Array.isArray(response.data.followers)) {
+        setFollowersData(response.data.followers.map(follower => ({
+          _id: follower._id || follower.id,
+          fullname: follower.fullname || "User",
+          profileImage: follower.profileImage || ""
+        })));
+      } else {
+        setFollowersData([]);
       }
       
-      setFollowingData(following);
+      // Process following data from the populated response
+      if (Array.isArray(response.data.following)) {
+        setFollowingData(response.data.following.map(following => ({
+          _id: following._id || following.id,
+          fullname: following.fullname || "User",
+          profileImage: following.profileImage || ""
+        })));
+      } else {
+        setFollowingData([]);
+      }
     } catch (error) {
-      console.error("Error loading following data:", error);
+      console.error('Error loading populated user data:', error);
+      toast.error('Failed to load followers/following data');
     }
   };
 
@@ -150,32 +133,19 @@ const UpdateProfilePage = () => {
     }
 
     try {
-      const response = await axios.put('https://devconnect-backend-6opy.onrender.com/api/users/me/update-profile', formData, {
+      const response = await axios.put(`${API_BASE_URL}/api/users/me/update-profile`, formData, {
         headers: { 
           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           'Content-Type': 'multipart/form-data',
         },
       });
+      
       if (response.data.message === "Profile updated successfully") {
         toast.success('Profile updated successfully!');
         setIsEditing(false);
-        // Refresh user data instead of reloading the page
-        const updatedUser = await axios.get('https://devconnect-backend-6opy.onrender.com/api/users/me', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
-        });
-        if (updatedUser.data.status) {
-          const userData = updatedUser.data.data.user;
-          setUser(userData);
-          
-          // Refresh followers and following data
-          if (userData.followers && userData.followers.length > 0) {
-            loadFollowersData(userData.followers);
-          }
-          
-          if (userData.following && userData.following.length > 0) {
-            loadFollowingData(userData.following);
-          }
-        }
+        
+        // Reload user data
+        await loadUserData();
       }
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -252,11 +222,11 @@ const UpdateProfilePage = () => {
           {/* Stats Section with clickable counters */}
           <div className="mt-6 flex justify-start gap-8">
             <div className="text-center cursor-pointer" onClick={() => setShowFollowers(true)}>
-              <span className="block text-2xl font-bold">{user.followers?.length || 0}</span>
+              <span className="block text-2xl font-bold">{followersData.length}</span>
               <span className="text-gray-400 text-sm hover:text-blue-400 transition-colors">Followers</span>
             </div>
             <div className="text-center cursor-pointer" onClick={() => setShowFollowing(true)}>
-              <span className="block text-2xl font-bold">{user.following?.length || 0}</span>
+              <span className="block text-2xl font-bold">{followingData.length}</span>
               <span className="text-gray-400 text-sm hover:text-blue-400 transition-colors">Following</span>
             </div>
           </div>
@@ -355,80 +325,82 @@ const UpdateProfilePage = () => {
       )}
 
       {/* Followers Modal */}
-     {showFollowers && (
-             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-               <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md max-h-96 overflow-y-auto">
-                 <div className="flex justify-between items-center mb-4">
-                   <h2 className="text-xl font-bold">Followers ({followersData.length})</h2>
-                   <button onClick={() => setShowFollowers(false)} className="text-gray-400 hover:text-white">
-                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                     </svg>
-                   </button>
-                 </div>
-                 
-                 {followersData.length === 0 ? (
-                   <p className="text-gray-400 text-center py-4">No followers yet</p>
-                 ) : (
-                   <div className="space-y-3">
-                     {followersData.map(follower => (
-                       <Link 
-                         key={follower._id} 
-                         to={`/profile/${follower._id}`}
-                         className="flex items-center p-2 rounded hover:bg-gray-700 transition-colors"
-                       >
-                         <img
-                           src={follower.profileImage || "https://via.placeholder.com/40"}
-                           alt={follower.fullname}
-                           className="w-10 h-10 rounded-full object-cover mr-3"
-                         />
-                         <span>{follower.fullname}</span>
-                       </Link>
-                     ))}
-                   </div>
-                 )}
-               </div>
-             </div>
-           )}
-     
-           {/* Following Modal */}
-           {showFollowing && (
-             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-               <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md max-h-96 overflow-y-auto">
-                 <div className="flex justify-between items-center mb-4">
-                   <h2 className="text-xl font-bold">Following ({followingData.length})</h2>
-                   <button onClick={() => setShowFollowing(false)} className="text-gray-400 hover:text-white">
-                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                     </svg>
-                   </button>
-                 </div>
-                 
-                 {followingData.length === 0 ? (
-                   <p className="text-gray-400 text-center py-4">Not following anyone yet</p>
-                 ) : (
-                   <div className="space-y-3">
-                     {followingData.map(following => (
-                       <Link 
-                         key={following._id} 
-                         to={`/profile/${following._id}`}
-                         className="flex items-center p-2 rounded hover:bg-gray-700 transition-colors"
-                       >
-                         <img
-                           src={following.profileImage || "https://via.placeholder.com/40"}
-                           alt={following.fullname}
-                           className="w-10 h-10 rounded-full object-cover mr-3"
-                         />
-                         <span>{following.fullname}</span>
-                       </Link>
-                     ))}
-                   </div>
-                 )}
-               </div>
-             </div>
-           )}
-         </div>
-       );
-     };
-     
-     export default UpdateProfilePage
+      {showFollowers && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md max-h-96 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Followers ({followersData.length})</h2>
+              <button onClick={() => setShowFollowers(false)} className="text-gray-400 hover:text-white">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {followersData.length === 0 ? (
+              <p className="text-gray-400 text-center py-4">No followers yet</p>
+            ) : (
+              <div className="space-y-3">
+                {followersData.map(follower => (
+                  <Link 
+                    key={follower._id} 
+                    to={`/profile/${follower._id}`}
+                    onClick={() => setShowFollowers(false)}
+                    className="flex items-center p-2 rounded hover:bg-gray-700 transition-colors"
+                  >
+                    <img
+                      src={follower.profileImage || "https://via.placeholder.com/40"}
+                      alt={follower.fullname}
+                      className="w-10 h-10 rounded-full object-cover mr-3"
+                    />
+                    <span>{follower.fullname}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Following Modal */}
+      {showFollowing && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md max-h-96 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Following ({followingData.length})</h2>
+              <button onClick={() => setShowFollowing(false)} className="text-gray-400 hover:text-white">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {followingData.length === 0 ? (
+              <p className="text-gray-400 text-center py-4">Not following anyone yet</p>
+            ) : (
+              <div className="space-y-3">
+                {followingData.map(following => (
+                  <Link 
+                    key={following._id} 
+                    to={`/profile/${following._id}`}
+                    onClick={() => setShowFollowing(false)}
+                    className="flex items-center p-2 rounded hover:bg-gray-700 transition-colors"
+                  >
+                    <img
+                      src={following.profileImage || "https://via.placeholder.com/40"}
+                      alt={following.fullname}
+                      className="w-10 h-10 rounded-full object-cover mr-3"
+                    />
+                    <span>{following.fullname}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default UpdateProfilePage;
