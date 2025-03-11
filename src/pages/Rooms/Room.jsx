@@ -61,7 +61,7 @@ const Room = () => {
     }
 
     // Initialize socket connection
-    socketRef.current = io("https://devconnect-backend-6opy.onrender.com/api", {
+    socketRef.current = io("https://devconnect-backend-6opy.onrender.com", {
       auth: { userId: user._id },
       reconnection: true,
       reconnectionAttempts: 5,
