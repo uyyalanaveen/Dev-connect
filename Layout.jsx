@@ -99,10 +99,9 @@ const Layout = () => {
               </div>
             )} */}
              <Link
-                  className="fixed bottom-6 right-6 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition"
+                  className="fixed bottom-6 righthome-6 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition"
                   to={'/chat'}
                   aria-label="Open Chat"
-                  target='__blank'
                 >
                   <MessageCircle className="w-6 h-6" />
                 </Link>
